@@ -8,15 +8,15 @@ import com.example.shoppinglist.domain.ShopListRepository
 object ShopListRepositoryImpl : ShopListRepository {
 
     private val shopListLiveData = MutableLiveData<List<ShopItem>>()
-    private val shopList = mutableListOf<ShopItem>()
+    private val shopList = sortedSetOf<ShopItem>(Comparator { p0, p1 -> p0.id.compareTo(p1.id) })
+//    private val shopList = mutableListOf<ShopItem>()
     private var autoIncrementId = 0
 
     init {
-        for (i in 0 until 10) {
+        for (i in 0 until 10000) {
             val item = ShopItem("Name $i", i, true)
-            shopList.add(item)
+            addShopItem(item)
         }
-        updateList()
     }
 
     override fun getShopList(): LiveData<List<ShopItem>> {
@@ -30,7 +30,9 @@ object ShopListRepositoryImpl : ShopListRepository {
     }
 
     override fun addShopItem(shopItem: ShopItem) {
-        if(shopItem.id == ShopItem.UNDEFINED_ID) { shopItem.id = autoIncrementId++ }
+        if(shopItem.id == ShopItem.UNDEFINED_ID) {
+            shopItem.id = autoIncrementId++
+        }
         shopList.add(shopItem)
         updateList()
     }
