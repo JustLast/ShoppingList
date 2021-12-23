@@ -13,6 +13,9 @@ import java.lang.RuntimeException
 class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>() {
 
     private var count = 0
+    var onShopItemLongClickListener: ((ShopItem) -> Unit)? = null
+    var onShopItemClickListener: ((ShopItem) -> Unit)? = null
+
     companion object {
         const val VIEW_TYPE_DISABLED = 0
         const val VIEW_TYPE_ENABLED = 1
@@ -45,13 +48,21 @@ class ShopListAdapter : RecyclerView.Adapter<ShopListAdapter.ShopItemViewHolder>
         holder.tvName.text = "${shopItem.name} $status"
         holder.tvCount.text = shopItem.count.toString()
 
-        holder.view.setOnLongClickListener { true }
+        holder.view.setOnClickListener {
+            onShopItemClickListener?.invoke(shopItem)
+        }
+
+        holder.view.setOnLongClickListener {
+            onShopItemLongClickListener?.invoke(shopItem)
+            true
+        }
     }
 
     override fun getItemCount(): Int {
         return shopList.size
     }
 
+    // Here we can set default values in view
     override fun onViewRecycled(holder: ShopItemViewHolder) {
         super.onViewRecycled(holder)
     }
