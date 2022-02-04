@@ -8,6 +8,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.example.shoppinglist.R
 import com.example.shoppinglist.domain.ShopItem
@@ -16,15 +17,7 @@ import com.google.android.material.textfield.TextInputLayout
 import org.w3c.dom.Text
 import java.lang.RuntimeException
 
-class ShopItemActivity : AppCompatActivity() {
-
-//    private lateinit var viewModel: ShopItemViewModel
-//
-//    private lateinit var tilName: TextInputLayout
-//    private lateinit var tilCount: TextInputLayout
-//    private lateinit var etName: TextInputEditText
-//    private lateinit var etCount: TextInputEditText
-//    private lateinit var buttonSave: Button
+class ShopItemActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
 
     private var screenMode = MODE_UNKNOWN
     private var shopItemId = ShopItem.UNDEFINED_ID
@@ -55,89 +48,11 @@ class ShopItemActivity : AppCompatActivity() {
         setContentView(R.layout.activity_shop_item)
 
         parseIntent()
-//
-//        viewModel = ViewModelProvider(this)[ShopItemViewModel::class.java]
-//
-//        initViews()
-        launchRightMode()
-//        setTextChangedListeners()
-//        observeViewModel()
-    }
 
-//    private fun observeViewModel() {
-//        viewModel.errorInputCount.observe(this) {
-//            val message = if (it) {
-//                getString(R.string.error_input_count)
-//            } else {
-//                null
-//            }
-//            tilCount.error = message
-//        }
-//        viewModel.errorInputName.observe(this) {
-//            val message = if (it) {
-//                getString(R.string.error_input_name)
-//            } else {
-//                null
-//            }
-//            tilName.error = message
-//        }
-//
-//        viewModel.shouldCloseScreen.observe(this) {
-//            finish()
-//        }
-//    }
-
-    private fun launchRightMode() {
-        val fragment = when(screenMode) {
-            MODE_EDIT -> ShopItemFragment.newInstanceEditItem(shopItemId)
-            MODE_ADD -> ShopItemFragment.newInstanceAddItem()
-            else -> throw RuntimeException("Screen mode is unknown: $screenMode")
+        if (savedInstanceState == null) {
+            launchRightMode()
         }
-        supportFragmentManager
-            .beginTransaction()
-            .add(R.id.shop_item_container, fragment)
-            .commit()
     }
-
-//    private fun launchAddMode() {
-//        buttonSave.setOnClickListener {
-//            viewModel.addShopItem(etName.text?.toString(), etCount.text?.toString())
-//        }
-//    }
-//
-//    private fun launchEditMode() {
-//        viewModel.getShopItem(shopItemId)
-//        viewModel.shopItem.observe(this) {
-//            etName.setText(it.name)
-//            etCount.setText(it.count.toString())
-//        }
-//
-//        buttonSave.setOnClickListener {
-//            viewModel.editShopItem(etName.text?.toString(), etCount.text?.toString())
-//        }
-//    }
-//
-//    private fun setTextChangedListeners() {
-//        etName.addTextChangedListener(object: TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-//
-//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                viewModel.resetErrorInputName()
-//            }
-//
-//            override fun afterTextChanged(p0: Editable?) {}
-//        })
-//
-//        etCount.addTextChangedListener(object: TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-//
-//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                viewModel.resetErrorInputCount()
-//            }
-//
-//            override fun afterTextChanged(p0: Editable?) {}
-//        })
-//    }
 
     private fun parseIntent() {
         if (!intent.hasExtra(EXTRA_SCREEN_MODE)) {
@@ -156,11 +71,19 @@ class ShopItemActivity : AppCompatActivity() {
         }
     }
 
-//    private fun initViews() {
-//        tilName = findViewById(R.id.til_name)
-//        tilCount = findViewById(R.id.til_count)
-//        etName = findViewById(R.id.et_name)
-//        etCount = findViewById(R.id.et_count)
-//        buttonSave = findViewById(R.id.save_button)
-//    }
+    private fun launchRightMode() {
+        val fragment = when(screenMode) {
+            MODE_EDIT -> ShopItemFragment.newInstanceEditItem(shopItemId)
+            MODE_ADD -> ShopItemFragment.newInstanceAddItem()
+            else -> throw RuntimeException("Screen mode is unknown: $screenMode")
+        }
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.shop_item_container, fragment)
+            .commit()
+    }
+
+    override fun onEditingFinished() {
+        finish()
+    }
 }

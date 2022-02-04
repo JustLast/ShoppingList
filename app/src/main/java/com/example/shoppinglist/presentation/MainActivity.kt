@@ -2,22 +2,29 @@ package com.example.shoppinglist.presentation
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoppinglist.R
+import com.example.shoppinglist.databinding.ActivityMainBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
+
+    private lateinit var binding: ActivityMainBinding
 
     private lateinit var viewModel: MainViewModel
     private lateinit var shopListAdapter: ShopListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupRecyclerView()
 
@@ -26,30 +33,44 @@ class MainActivity : AppCompatActivity() {
             shopListAdapter.submitList(it)
         })
 
-        val buttonAddItem = findViewById<FloatingActionButton>(R.id.button_add_shop_item)
-        buttonAddItem.setOnClickListener {
-            val intent = ShopItemActivity.newIntentAddItem(this)
-            startActivity(intent)
+        binding.buttonAddShopItem.setOnClickListener {
+            if (isOnePaneMode()) {
+                val intent = ShopItemActivity.newIntentAddItem(this)
+                startActivity(intent)
+            } else {
+                launchFragment(ShopItemFragment.newInstanceAddItem())
+            }
         }
     }
 
+    private fun isOnePaneMode(): Boolean {
+        return binding.shopItemContainer == null
+    }
+
+    private fun launchFragment(fragment: Fragment) {
+        supportFragmentManager.popBackStack()
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.shop_item_container, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
     private fun setupRecyclerView() {
-        val rvShopList = findViewById<RecyclerView>(R.id.rv_shop_list)
         shopListAdapter = ShopListAdapter()
-        rvShopList.adapter = shopListAdapter
-        rvShopList.recycledViewPool.setMaxRecycledViews(
+        binding.rvShopList.adapter = shopListAdapter
+        binding.rvShopList.recycledViewPool.setMaxRecycledViews(
             ShopListAdapter.VIEW_TYPE_ENABLED,
             ShopListAdapter.MAX_POOL_SIZE
         )
-        rvShopList.recycledViewPool.setMaxRecycledViews(
+        binding.rvShopList.recycledViewPool.setMaxRecycledViews(
             ShopListAdapter.VIEW_TYPE_DISABLED,
             ShopListAdapter.MAX_POOL_SIZE
         )
 
-
         setupLongClickListener()
         setupClickListener()
-        setupSwipeListener(rvShopList)
+        setupSwipeListener(binding.rvShopList)
     }
 
     private fun setupSwipeListener(rvShopList: RecyclerView) {
@@ -75,13 +96,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListener() {
         shopListAdapter.onShopItemClickListener = {
-            Log.d("CLICK_LISTENER_TEST", it.toString())
-            val intent = ShopItemActivity.newIntentEditItem(this, it.id)
-            startActivity(intent)
+            if (isOnePaneMode()) {
+                val intent = ShopItemActivity.newIntentEditItem(this, it.id)
+                startActivity(intent)
+            } else {
+                launchFragment(ShopItemFragment.newInstanceEditItem(it.id))
+            }
         }
     }
 
     private fun setupLongClickListener() {
         shopListAdapter.onShopItemLongClickListener = { viewModel.changeEnabledState(it) }
     }
+
+    override fun onEditingFinished() {
+        Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show()
+        supportFragmentManager.popBackStack()
+    }
+
+
 }
